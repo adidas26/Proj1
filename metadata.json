@@ -1,0 +1,7 @@
+{
+  "name": "AeroPulse - Air Quality & Health",
+  "description": "Real-time air quality analysis and health correlation insights using AI-powered environmental data interpretation.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
