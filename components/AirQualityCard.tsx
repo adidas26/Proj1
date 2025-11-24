@@ -71,8 +71,32 @@ const AirQualityCard: React.FC<AirQualityCardProps> = ({ aqi, pollutant, riskLev
   // Linear Scale Calculations
   const scalePercentage = Math.min((aqi / 300) * 100, 100);
 
-  // Placeholder Concentration Logic
-  const placeholderConcentration = (aqi * 0.45).toFixed(1);
+  // Pollutant Breakdown Data (Placeholder Logic)
+  // Generating values proportional to AQI for realism
+  const breakdown = [
+      { name: 'PM2.5', val: (aqi * 0.5 + 4).toFixed(1), unit: 'µg/m³' },
+      { name: 'PM10', val: (aqi * 0.8 + 12).toFixed(1), unit: 'µg/m³' },
+      { name: 'NO2', val: (aqi * 0.1 + 8).toFixed(1), unit: 'ppb' },
+      { name: 'SO2', val: (aqi * 0.05 + 2).toFixed(1), unit: 'ppb' },
+      { name: 'CO', val: (aqi * 0.01 + 0.4).toFixed(2), unit: 'ppm' },
+      { name: 'O3', val: (aqi * 0.3 + 25).toFixed(1), unit: 'ppb' },
+  ];
+
+  // Helper to match the dominant pollutant string to its breakdown value
+  const getDominantConcentration = () => {
+      const p = pollutant.toLowerCase();
+      let match = breakdown.find(b => p.includes(b.name.toLowerCase()));
+      
+      if (!match) {
+          if (p.includes('ozone')) match = breakdown.find(b => b.name === 'O3');
+          else if (p.includes('monoxide')) match = breakdown.find(b => b.name === 'CO');
+          else if (p.includes('nitrogen')) match = breakdown.find(b => b.name === 'NO2');
+          else if (p.includes('sulfur')) match = breakdown.find(b => b.name === 'SO2');
+      }
+      return match;
+  };
+
+  const dominantConc = getDominantConcentration();
 
   // Helper to get icon based on pollutant string
   const getPollutantIcon = () => {
@@ -125,9 +149,9 @@ const AirQualityCard: React.FC<AirQualityCardProps> = ({ aqi, pollutant, riskLev
   };
 
   return (
-    <div className={`h-full relative overflow-hidden p-8 rounded-3xl border ${theme.bg} ${theme.border} shadow-sm transition-all duration-500 group`}>
+    <div className={`h-full relative overflow-hidden p-8 rounded-3xl border ${theme.bg} ${theme.border} shadow-sm transition-all duration-500 group flex flex-col`}>
       
-      <div className="flex flex-col items-center justify-between h-full gap-4">
+      <div className="flex flex-col items-center gap-4 flex-grow">
         
         {/* Top: Icon & Badge */}
         <div className="w-full flex flex-col items-center gap-3">
@@ -183,11 +207,14 @@ const AirQualityCard: React.FC<AirQualityCardProps> = ({ aqi, pollutant, riskLev
                 <p className={`text-xs font-bold uppercase tracking-wider opacity-50 ${theme.subtext}`}>Dominant Pollutant</p>
                 <div className="flex flex-col items-center mt-1">
                     <p className={`text-2xl font-bold ${theme.text}`}>{pollutant}</p>
-                    {/* Concentration Breakdown Section */}
-                    <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium ${theme.subtext} bg-white/40 border ${theme.border} shadow-sm`}>
-                        <span className="opacity-70">Concentration:</span>
-                        <span className="font-bold">{placeholderConcentration} µg/m³</span>
-                    </div>
+                    
+                    {/* Display dominant pollutant concentration if available */}
+                    {dominantConc && (
+                        <div className={`mt-1 px-3 py-1 rounded-full bg-white/50 border ${theme.border} shadow-sm flex items-baseline gap-1 animate-fade-in`}>
+                            <span className={`text-sm font-bold ${theme.text}`}>{dominantConc.val}</span>
+                            <span className={`text-[10px] font-medium ${theme.subtext} opacity-70`}>{dominantConc.unit}</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -207,12 +234,22 @@ const AirQualityCard: React.FC<AirQualityCardProps> = ({ aqi, pollutant, riskLev
                         style={{ left: `${scalePercentage}%`, borderColor: 'white', backgroundColor: 'currentColor' }}
                     ></div>
                 </div>
-                <div className="flex justify-between text-[10px] uppercase font-bold text-slate-400 mt-1">
-                    <span>Good</span>
-                    <span>Hazardous</span>
-                </div>
             </div>
         </div>
+      </div>
+
+      {/* Footer: Pollutant Breakdown */}
+      <div className="mt-5 pt-5 border-t border-black/5 w-full">
+         <p className={`text-[10px] font-bold uppercase tracking-wider opacity-50 text-center mb-3 ${theme.subtext}`}>Concentration Breakdown</p>
+         <div className="grid grid-cols-3 gap-2">
+            {breakdown.map((item) => (
+                <div key={item.name} className="flex flex-col items-center p-2 rounded-lg bg-white/50 border border-white/60 shadow-sm">
+                    <span className="text-[10px] font-bold text-slate-500">{item.name}</span>
+                    <span className={`text-sm font-bold ${theme.text}`}>{item.val}</span>
+                    <span className="text-[9px] text-slate-400 leading-none">{item.unit}</span>
+                </div>
+            ))}
+         </div>
       </div>
     </div>
   );
